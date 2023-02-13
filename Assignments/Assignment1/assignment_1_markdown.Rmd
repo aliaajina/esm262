@@ -1,0 +1,14 @@
+---
+title: "assignment_1"
+author: "Alia Ajina"
+date: "2/13/2023"
+output: html_document
+---
+
+##Why I'm taking the class
+
+# I am taking ESM 262 to refresh my knowledge and expand my knowledge of data science in preperation for ESM 232. I also want to have more exposure to technical skills in my courses as I will likely use them in future jobs. It would be great to be able to take these skills and apply them to projects like my group project to make our Circuitscape analyses reproducible.
+
+##Data science bakground
+
+# My previous data science background includes ESM 206 as well as using R in a few other courses such as Groundwater with Scott Jasaecho. Beyond this, I used MatLab in undergrad and post-undergrad while working on a geomorphology research project studying debris flows here in Santa Barbara and Goleta, but the work I did was fairly begginer oriented. I have a lot of experience using ArcGIS and feel very comfortable in that program, however, I don't feel very comfortable with my skill set in R, as is, and would like to expand it to better understand loops and functions. I'm looking forward to gaining more data science skills with this class!
