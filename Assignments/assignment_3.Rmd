@@ -1,9 +1,15 @@
-
 ---
-title: 'Assignment_3'
+title: 'Assignment 3'
 author: "Alia Ajina"
 date: "March 4, 2023"
-
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: journal
+    code_folding: show
+    smooth_scroll: yes
+    collapsed: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -12,25 +18,23 @@ knitr::opts_chunk$set(echo =TRUE)
 library(tidyverse)
 library(purrr)
 library(ggpubr)
+library(kableExtra)
 ```
 
-# Looping assignment
+## Looping assignment
 Based on Naomi Tague's Rmarkdown "Looping"
 
 Using our **autpower** function to estimate a distribution of power using pmap and for loops.
 
-# Our highway
+### Our highway
 
 4 car types 
 
 We have 4 different car types - and we know how often each occurs:
 
 * car A  mass 20000 kg, area 22 m^2^
-
 * car B mass 65000 kg, area 30 m^2^
-
 * car C mass 38000 kg area 22 m^2^
-
 * car D mass 5000 kg area 10 m^2^
 
 Mean highway speed is 80 km/hr
@@ -38,250 +42,176 @@ Mean highway speed is 80 km/hr
 SD of 10 km/hr
 
 
-```{r sampling2, eval=TRUE, echo=TRUE}
+```{r sampling, eval=TRUE, echo=TRUE}
 source("../R/autopower.R")
+
 # Generating a dataframe to store information on our possible cars
 possible_cars = data.frame(name = c("A", "B", "C", "D"),
                            mass=c(10000, 65000, 38000, 5000), 
                            area = c(22, 30, 22, 10))
 
-# Convert our base speed from km/hr to m/s
+# Convert our base speed from km/hr to m/s - in the future I will use a function for this
 speed_base = 80 * 0.277
 
 # Since there is 1 mass and 1 area for each car, using our function **autopower** we can estimate power for each car
-possible_cars$power = autopower(V=speed_base, A = possible_cars$area, m=possible_cars$mass)
+possible_cars$power = autopower(V=speed_base, 
+                                A = possible_cars$area, 
+                                m=possible_cars$mass)
 
-head(possible_cars)
-
-# quick visualization of our powers per each car's area and mass                        
+# Quick visualization of our powers per each car's area and mass                        
 ggplot(possible_cars, aes(x=mass, y=power, fill=as.factor(area))) + 
   geom_col() + 
   labs(y="Power W", x="Mass (kg)", fill="Area"~(m^2))
 
 ```
 
-# Building a highway
+**Figure 1** Quick visualization of power consumption associated with each car's area (m^2) and mass (kg).
 
-What could be the total power consumed if there are 100 cars on this highway each hour,
-they are travelling at a range of speeds - mean is 100km/hr and speeds tend to
-be log-normally distributed
+### Building a highway
 
-How would the total power consumed vary by car
-So if all cars are car A; OR all cars are car B OR all cars are car C
-
-We will use *sample* here to generate speeds for our 100 cars and look at different ways to
+We will use *sample* here to generate speeds for 100 cars and look at two different ways to
 repeat power calculation for different cars
 
+We will then use *pmap* and *for*: to loop our results
 * *pmap* for repetition - a efficient way of looping in R
 * *for* for repetition - a more standard way of looping available in many langugaes
 
-# First lets do it 'by hand'
+## Method 1: *pmap*
 
-```{r byhand}
+First, we'll use pmap to automate this task using a sample of 200 speeds with a log normal distribution and a mean of 80km/hr. The standard deviation (10km/hr) is 8% of the mean speed, 80 km/hr.
 
-# what is I want to estimate average power use given each car
-
-possible_cars
-
-# use sample to generate a distribution of speeds
-
-# assume a log normal distribution of speeds with mean 80km/hr, and standard deviation that is 10km/hr or 2.777 m/s
-
-# recall our function needs speed in m/s not km/hr so we will also do a conversion
-# lets get a sample of a 200 speeds- we could also do this by actually measuring speeds
-
-nsample = 200
-mean_speed = log(80*0.277)
-
-speeds = rlnorm(mean=mean_speed, sd=10*0.277, nsample)
-summary(speeds)
-
-plot(density(speeds), ylab="Distribution of Speeds in (m/s)")
-
-
-# how do we run each car for all speeds 
-
-# first lets do it by hand for the first car - the first row in our possible cars matrix
-possible_cars[1,]
-
-# we could do it by hand
-powerA = autopower(V=speeds, A = possible_cars$area[1], m=possible_cars$mass[1])
-# lets look at what we get
-summary(powerA)
-
-# next car (row 2)
-powerB = autopower(V=speeds, A = possible_cars$area[2], m=possible_cars$mass[2])
-# lets look at what we get
-summary(powerB)
-
-# next car (row 3)
-powerC = autopower(V=speeds, A = possible_cars$area[3], m=possible_cars$mass[3])
-# lets look at what we get
-summary(powerC)
-
-# next car (row 4)
-powerD = autopower(V=speeds, A = possible_cars$area[4], m=possible_cars$mass[4])
-# lets look at what we get
-summary(powerD)
-
-# we could put this together
-powerall1 = cbind.data.frame(powerA, powerB, powerC, powerD)
-colnames(powerall1)=possible_cars$name
-
-```
-
-# Second using R built in tools
-
-Doing this by hand would be hard if we had many different cars - can we automate?
-
-YES
-
-first lets try *pmap*  
-
-*pmap* is available in the *purr* library
-
-*mapply* is another R option
 
 ```{r withpmap}
 
-# the first part, generating speeds is the same
-# what is I want to estimate average power use given  each car
-
 possible_cars
 
-# the first part is the same as above
-# use sample to generate a distribution of speeds
-
-# assume a log normal distribution of speeds with mean 80km/hr
-# recall our function needs speed in m/s not km/hr so we will also do a conversion
-# lets get a sample of a 200 speeds- we could also do this by actually measuring speeds
-
+# Creating our sample speeds and converting from km/hr to m/s
 nsample = 200
 mean_speed = log(80*0.277)
 
-speeds = rlnorm(mean=mean_speed, sd=2.777, nsample)
+speeds = rlnorm(mean=mean_speed, sd=.08*mean_speed, nsample)
 summary(speeds)
 
-plot(density(speeds), ylab="Distribution of Speeds in (m/s)")
+# Quick visualization of our distribution of speeds based on this random sample
+# plot(density(speeds), ylab="Distribution of Speeds in (m/s)")
+
+# Running each car for all speeds using pmap: runs a function for each value in a list of parameters, with other parameters set for each iteration
+
+powerall1 = pmap(list(A = possible_cars$area, m=possible_cars$mass), autopower, V=speeds)
+
+# Creating dataframe
+powerall1 = as.data.frame(powerall1, col.names=possible_cars$name)
 
 
-# how do we run each car for all speeds 
-# pmap runs a function for each value in a list of parameters, with other parameters set for each iteration
+# Turning columns into rows to plot and table easier using pivot_longer
+powerallr1 = powerall1 %>% pivot_longer(cols=everything(), 
+                                        names_to="car", 
+                                        values_to="power")
 
+# Find mean and max powers and create table
+means_pmap <- powerallr1 %>% 
+  group_by(car) %>% 
+  summarize(mean = mean(power),
+            max = max(power))
 
-powerall2 = pmap(list(A = possible_cars$area, m=possible_cars$mass), autopower, V=speeds)
+means_pmap %>% 
+  kable(caption = "Table 1: Sample statistics for car powers using pmap method",
+        col.names = c("Car", "Mean power (m/s)", "Max power (m/s)")) %>% 
+  kable_styling(full_width = F,
+                bootstrap_options = "bordered",
+                position = "center")
 
-# lets turn to a data frame for easier graphing
-# we can add column names
-powerall2 = as.data.frame(powerall2, col.names=possible_cars$name)
+# Visualization of boxplots for method 1 - pmap
 
-# apply family of functions does this to - FYI
-# what mapply does is run the function for each row in parameters listed, using values for other parameters listed in MoreArgs EACH time - a column for row in parameter list is returned
-powerall2b = mapply(FUN=autopower, A = possible_cars$area, m=possible_cars$mass, MoreArgs = list(V=speeds)  )
-# we can add column names
-colnames(powerall2b)=possible_cars$name
+method1_plot = ggplot(powerallr1, aes(car, power, fill=car)) + 
+  geom_boxplot() + 
+  ggtitle("Method 1: Pmap") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  labs(y = "Car", x = "Power") + theme_minimal()
 
-head(powerall2b)
-head(powerall2)
+method1_plot
 
-
-# for plotting sometimes its useful to turn columns in to rows
-powerallr2 = powerall2 %>% pivot_longer(cols=everything(), names_to="car", values_to="power")
-head(powerallr2)
-
-# quick visualization
-
-method2_plot = ggplot(powerallr2, aes(car,power, fill=car))+geom_boxplot()+ggtitle("pmap")
-method2_plot
-
-# put plots side by side
-# to confirm that they look similar
-ggarrange(method1_plot, method2_plot)
-
-# compare values
-head(powerallr2)
-head(powerallr1)
-
-# not exactly the same - why?
-# recall that we sample speeds!
-
-# but we can compare means (also using  map :)
-# map runs the function (here - mean), over each column 
-# they are close but still not exact, so statistics such as means and quantiles are # similar, and relative difference between cars is the same
-powerall1 %>% map(mean)
-powerall2 %>% map(mean)
-
-# upper 90% quantile
-powerall1 %>% map(quantile, probs=0.9)
-powerall2 %>% map(quantile, probs=0.9)
 ```
 
-# Third - classic looping *for*
+**Figure 2** Boxplot displaying power consumption for each car using *pmap*.
 
-*pmap* works quickly but it is unique to R
-Other programming language (and R) use what are called loops - where repetition is more explicit
 
-Lets do this one more time using a *for* loop
+## Method 2: Classic looping *for*
+
+*pmap* works quickly but it is unique to R, so we will use *for* loops to compute our powers for each car as this is more common in other programming languages.
+
+Again, this task uses a sample of 200 speeds with a log normal distribution and a mean of 80km/hr. The standard deviation (10km/hr) is 8% of the mean speed, 80 km/hr.
 
 ```{r withforloop}
 
-# the first part, generating speeds is the same
-# what is I want to estimate average power use given  each car
-
 possible_cars
 
-# use sample to generate a distribution of speeds
-
-# assume a log normal distribution of speeds with mean 80km/hr
-# recall our function needs speed in m/s not km/hr so we will also do a conversion
-# lets get a sample of a 200 speeds- we could also do this by actually measuring speeds
-
+# Creating our sample speeds and converting from km/hr to m/s
 nsample = 200
 mean_speed = log(80*0.277)
 
-speeds = rlnorm(mean=mean_speed, sd=2.777, nsample)
+speeds = rlnorm(mean=mean_speed, sd=.08*mean_speed, nsample)
 summary(speeds)
 
-plot(density(speeds), ylab="Distribution of Speeds in (m/s)")
+# Quick visualization of our distribution of speeds based on this random sample
+# plot(density(speeds), ylab="Distribution of Speeds in (m/s)")
+
+# Running each car for all speeds using a for loop that cycles through
+# Creating dataframe
+powerall2 = as.data.frame(matrix(nrow=length(speeds), 
+                                 ncol=nrow(possible_cars)))
 
 
-# how do we run each car for all speeds 
-# we use a for loop to cycle through
-# we need to create a data frame to store results - as above
-# one column for each car and one row for each speed
-
-powerall3 = as.data.frame(matrix(nrow=length(speeds), ncol=nrow(possible_cars)))
-# because we don't initialize it - values are NA
-head(powerall3)
-
-# how many cars area there
-nrow(possible_cars)
-# for loops use an index - in this case "i" but you could use anything - it repeats
-# anything between the {} for each values of i between 1 and nrow(possible_car) (which is 3 in our case)
-
-# index in to a matrix (like powerall3) is by row and column powerall3[2,5] is 2nd row and 5th column
+# Running *for* loop using our data from possible_cars
 for (i in 1:nrow(possible_cars)) {
-  powerall3[,i] = autopower(A=possible_cars$area[i], m=possible_cars$mass[i], V=speeds)
+  powerall2[,i] = autopower(A=possible_cars$area[i], 
+                            m=possible_cars$mass[i], 
+                            V=speeds)
 }
 
-# now it looks like above
-head(powerall3)
-# we can add column names
-colnames(powerall3)=possible_cars$name
+# Add column names
+colnames(powerall2)=possible_cars$name
 
-# plotting is the same as above
 
-# for plotting sometimes its useful to turn columns in to rows
-powerallr3 = powerall3 %>% pivot_longer(cols=everything(), names_to="car", values_to="power")
-head(powerallr3)
+# Turning columns into rows for plotting and table
+powerallr2 = powerall2 %>% pivot_longer(cols=everything(), 
+                                        names_to="car", 
+                                        values_to="power")
 
-# quick visualization
-method3_plot = ggplot(powerallr3, aes(car,power, fill=car))+geom_boxplot()+ggtitle("For Loop")
+# Find mean and max powers and create table
+means_pmap <- powerallr2 %>% 
+  group_by(car) %>% 
+  summarize(mean = mean(power),
+            max = max(power))
 
-ggarrange(method1_plot, method2_plot, method3_plot, nrow=1)
+means_pmap %>% 
+  kable(caption = "Table 2: Sample statistics for car powers using for loop method",
+        col.names = c("Car", "Mean power (m/s)", "Max power (m/s)")) %>% 
+  kable_styling(full_width = F,
+                bootstrap_options = "bordered",
+                position = "center")
 
-powerall1 %>% map(mean)
-powerall2 %>% map(mean)
-powerall3 %>% map(mean)
+# Visualization of boxplots for method 2 - for loop
+method2_plot = ggplot(powerallr2, aes(car, power, fill=car)) + 
+  geom_boxplot() + 
+  ggtitle("Method 2: For Loop") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  labs(y = "Car", x = "Power") + theme_minimal()
+
+method2_plot
 
 ```
+
+**Figure 3** Boxplot displaying power consumption for each car using *for* loop.
+
+
+## Both Methods Comparison
+
+```{r boxplots combined}
+
+# Combining the two boxplots (pmap and for loop methods) for comparison
+ggarrange(method1_plot, method2_plot, nrow=1)
+
+```
+
+**Figure 4** Comparison of method 1 and method 2. As we used a random number generator for our samples, the power averages and ranges are different, however, the trends are the same in each scenario between car A, B, C, and D.
