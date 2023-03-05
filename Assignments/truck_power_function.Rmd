@@ -1,0 +1,62 @@
+---
+title: "truck_power_assignment"
+author: "Alia Ajina"
+date: "2/22/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+```
+Try and test my new function
+```{r function, include=FALSE}
+# function definition
+
+heavy_truck=truck_power(m = 31752, A = 16, V=c(30, 22.22, 33.33, 11.11, 1.4))
+
+light_truck=truck_power(m = 15000, A = 16, V=c(30, 22.22, 33.33, 11.11, 1.4))
+```
+
+
+```{r}
+# speed = x-axis, power = y-axis
+V=c(30, 22.22, 33.33, 11.11, 1.4)
+
+trucks = data.frame(cbind(V, heavy_truck, light_truck))
+trucks
+
+ggplot(trucks, aes(V, heavy_truck)) + geom_line() + geom_line(aes(V, light_truck), col = "blue") + labs(x="Velocity (m/s)", y= "Power (Watts)")
+```
+
+```{r sampling}
+#Sampling_example - pulled from esm262_clones
+
+source("R/truck_power.R")
+
+# generate sample speeds from a distribution
+nsample = 100
+speeds = rnorm(mean=25, sd=4, n=nsample)
+
+# Step 1  create data frame to store results 
+# how many simulations, what do you want to keep
+
+#create a dataframe that has rows for each model run
+# columns for height, flowrate and power estimate
+results = data.frame(speed=speeds, power=NA)
+
+head(results)
+
+# if you only have one input and everything else is the same, R is smart enough
+# to create a set of outputs
+results$power = truck_power(V=speeds, A=25, m=20000)
+
+# ALWAYS look at your results to make sure it make sense
+ggplot(results, aes(speed, power/1000))+geom_point()+labs(x="speed in m/s", y="power in kW")
+ggplot(results, aes(x="Across Speed",y=power/1000))+geom_boxplot()+labs(y="power in kW")
+
+```
+
+
+

@@ -1,0 +1,40 @@
+---
+title: "topic4_loops"
+author: "Alia Ajina"
+date: "2/27/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+# creating a random set of numbers with a mean of 5, sd of .4, and total of 10
+fert = rnorm(mean = 5, sd = .4, n=10)
+fert
+```
+```{r}
+crop = data.frame(fert=fert)
+TP=20
+crop
+```
+
+
+```{r}
+source("../R/yield.R")
+total_yield = 0 #starting year is 0
+
+for (i in 1:10) {
+  yield_10yrs = yield(fert[i])
+  total_yield = total_yield + yield_10yrs #telling the program to add up each year starting at year 0, instead of just computing for each year indivually
+  }
+```
+
+```{r}
+source("~/Desktop/ESM_262/esm262/R/compute_total_yield.R")
+
+compute_total_yield(fert, TP)
+```
+

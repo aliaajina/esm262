@@ -1,0 +1,58 @@
+---
+title: "npv_working"
+author: "Alia Ajina"
+date: "3/1/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#practice function
+source("../R/Compute_npv.R")
+
+compute_npv(20, discount=.01, time=20)
+```
+
+```{r}
+damages = c(25,33,91,24)
+damages
+
+discount_rates = seq(from=0.01, to=0.04, by=0.005) #instead of random sampling a sequence completes a sequence of numbers for you with start, end, and where u want it to go between - nice way to generate fake data for yourself
+discount_rates
+```
+
+```{r}
+yr=10
+
+compute_npv(20, discount=discount_rates, value=damages) #get warning because it doesn't know how to bring this together in a logical way - so we can use a for loop to do this more systematically
+```
+
+```{r}
+# what type of data structure do i need for a for loop? dataframe
+
+npvs = data.frame(matrix(nrow=length(damages), ncol=length(discount_rates))) # it will just be NA for all because we didn't tell it what to fill in with - we will use a for loop to fill in this dataframe, we need an outerloop to go through the rows and an inner forloop to go through the columns
+
+for (i in 1:length(damages)) {
+  for (j in 1:length(discount_rates)) {
+    npvs[i,j]= compute_npv(value=damages[i], discount=discount_rates[j],time=yr)  }
+}
+
+#we want to name our columns and rows
+
+colnames(npvs)=discount_rates
+rownames(npvs)=damages
+
+npvs
+
+#to plot with ggplot we add a column for original value and then rearrange it
+npvs$damage = damages
+npvsg =npvs %>% pivot_longer(!damage,names_to="dis", values_to="npv")
+head(npvsg)
+
+#ggplot
+ggplot(npvsg, aes(x=damage, y=npv, col=dis)) + geom_point() + labs(col="Discount\nRate")
+```
+
