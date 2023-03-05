@@ -43,7 +43,7 @@ SD of 10 km/hr
 
 
 ```{r sampling, eval=TRUE, echo=TRUE}
-source("../R/autopower.R")
+source("../../R/autopower.R")
 
 # Generating a dataframe to store information on our possible cars
 possible_cars = data.frame(name = c("A", "B", "C", "D"),
