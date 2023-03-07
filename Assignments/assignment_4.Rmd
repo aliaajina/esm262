@@ -1,0 +1,45 @@
+---
+title: "Assignment_4"
+author: "Alia Ajina"
+date: "3/6/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+```
+
+```{r}
+fish <- read.table(here("working", "fish.txt"))
+head(fish)
+
+fish_vect <- as.vector(fish[,1])
+fish_fact <- as.factor(fish_vect)
+
+my_data <- fish_fact
+
+fish_fnct(my_data)
+
+
+```
+
+
+```{r}
+fish <- read.table(here("working", "fish.txt"))
+head(fish)
+
+fish_vect <- as.vector(fish[,1])
+fish_fact <- as.factor(fish_vect)
+
+names(which.max(summary(fish_fact)))
+
+names(which.min(summary(fish_fact)))
+
+sum(summary(fish_fact))
+
+```
+
+
+
