@@ -7,36 +7,43 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+# Loading required packages
 library(tidyverse)
 library(here)
 ```
 
 ```{r with function}
+
+# Reading in the data as a table using here
 fish <- read.table(here("working", "fish.txt"))
 head(fish)
 
-fish_vect <- as.vector(fish[,1])
-fish_fact <- as.factor(fish_vect)
+# Renaming our data to use within the fish_fnct - called 'data_fact' so other users can generically load in their own data with same naming convention
+data_fact <- fish
 
-my_data <- fish_fact
-
-fish_fnct(my_data)
-
+# Applying function to my_data to display the most common fish, least common fish, and total number of fish
+fish_fnct(data_fact)
 
 ```
 
-
 ```{r by hand}
+# Same as above except by hand for own personal understanding
+
+# Read in data as a table using here
 fish <- read.table(here("working", "fish.txt"))
 head(fish)
 
+# Turning data into a vector and then a factor for function usability
 fish_vect <- as.vector(fish[,1])
 fish_fact <- as.factor(fish_vect)
 
+# Identifying most common fish
 names(which.max(summary(fish_fact)))
 
+# Identifying least common fish
 names(which.min(summary(fish_fact)))
 
+# Identifying total number of fish in dataset
 sum(summary(fish_fact))
 
 ```
